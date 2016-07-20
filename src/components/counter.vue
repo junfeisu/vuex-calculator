@@ -29,6 +29,14 @@
 				stack: [], 
 				operateStack: [],
 				continue: false,  //to joint the operate num 
+				priority : {
+					'+' : 2,
+					'-' : 2,
+					'(' : 0,
+					')' : 1,
+					'*' : 3,
+					'/' : 3
+				}
 			}
 		},
 		vuex: {
@@ -47,7 +55,6 @@
 					this.equation.push(parseFloat(value))
 				}
 				this.continue = true
-				console.log(this.equation)
 			},
 			addOperator: function(event){  //get the operator value and push in operator[]
 				this.continue = false
@@ -55,26 +62,19 @@
 				this.equation.push(event.target.innerHTML)
 			},
 			compute: function() {  //excute the equation
-				var self = this;
-				var type = {
+				let self = this
+				let type = {
 					'+' : self.increase,
 					'-' : self.decrease,
 					'*' : self.multiply,
 					'/' : self.divide
-				},
-				priority = {
-					'+' : 2,
-					'-' : 2,
-					'(' : 0,
-					')' : 1,
-					'*' : 3,
-					'/' : 3
 				}
-				if(self.countValue.match(/^[0-9]+([\+\-\*\/][0-9]+)+$/) !== null){  //judge the equation is valid or not
-					console.log(this.equation)
-				}else{
-					console.log('the equation is not valid')
-				}
+				// if(self.countValue.match(/^[0-9]+([\+\-\*\/][0-9]+)+$/) !== null){  //judge the equation is valid or not
+					self.middleTolate(self.equation)
+					console.log(self.lateEquation)
+				// }else{
+				// 	console.log('the equation is not valid')
+				// }
 			},
 			backpace: function() {
 				let tmp = []
@@ -89,13 +89,14 @@
 				}else {
 					this.equation.pop()
 				}
-				console.log(this.equation)
 			},
 			clearData: function() {   //reset the init state
 				this.countValue = ''
 				this.num = []
 				this.operator = []
 				this.continue = false
+				this.equation = []
+				this.lateEquation = []
 			},
 			min: function([ a, b ] = [ 1, 1 ]){  //get the min index of 'x' and '/'
 				let result = ''
@@ -112,25 +113,41 @@
 				return -1;
 			},
 			middleTolate: function(equation) {
-				for (var i = 0, len = equation.length; i < len; i++) {
-					if(typeof(equation[i]) === 'number') {
-						lateEquation.push(equation[i])
+				var eLen = equation.length
+				for (var i = 0 ; i < eLen; i++) {
+					if(typeof(equation[i]) === 'number') {  //the nummber push into lateEquation directly
+						this.lateEquation.push(equation[i])
 					}else{
-						if(operateStack.length !==0 ) {
-							if(priority[equation[i]] >= priority[operateStack[0]]) {
-								lateEquation.unshift(equation[i])
-							}else {
-								for(var j = 1, len = operateStack.length; j < len; j++) {
-									if(priority[operateStack[j]] < priority[equation[i]]) { 
-										operateStack.splice(j-1, 0, equation[i])
+						if(this.operateStack.length !== 0 ) {  
+							if(this.priority[equation[i]] === 0) {
+								this.operateStack.unshift(equation[i])  //if the operator === '(' push into lateEquation directly
+							}else if(this.priority[equation[i]] === 1) {
+									for(var l = 0, oLen =this.operateStack.length; l < oLen; l++) {
+										var shifted = this.operateStack.shift()
+										if(shifted !== '('){
+											this.lateEquation.push(shifted)
+										}
 									}
+							}else {
+								if(this.priority[equation[i]] >= this.priority[this.operateStack[0]]) {
+									this.operateStack.unshift(equation[i])
+								}else {
+									for(var j = 0, oLen = this.operateStack.length ; j < oLen; j++) {
+										if(this.priority[this.operateStack[j]] >= this.priority[equation[i]]) { 
+											this.lateEquation.push(this.operateStack.shift())
+										}
+									}
+									this.operateStack.push(equation[i])
 								}
-								operateStack.push(equation[i])
 							}
 						}else {
-							operateStack.push(equation[i])
+							this.operateStack.push(equation[i])  //if the operateStack is null push into directly
 						}
 					}
+				}
+				console.log(this.operateStack)
+				for(var k = 0, oLen = this.operateStack.length; k < oLen; k++) {
+					this.lateEquation.push(this.operateStack.shift())
 				}
 			}
 		}
