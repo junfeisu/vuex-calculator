@@ -15,7 +15,8 @@
   }
 </script>
 
-<style>
+<style lang='sass'>
+@import './components/common/normalize.css'
 html {
   height: 100%;
 }
