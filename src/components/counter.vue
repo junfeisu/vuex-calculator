@@ -61,21 +61,6 @@
 				this.countValue += event.target.innerHTML
 				this.equation.push(event.target.innerHTML)
 			},
-			compute: function() {  //excute the equation
-				let self = this
-				let type = {
-					'+' : self.increase,
-					'-' : self.decrease,
-					'*' : self.multiply,
-					'/' : self.divide
-				}
-				// if(self.countValue.match(/^[0-9]+([\+\-\*\/][0-9]+)+$/) !== null){  //judge the equation is valid or not
-					self.middleTolate(self.equation)
-					console.log(self.lateEquation)
-				// }else{
-				// 	console.log('the equation is not valid')
-				// }
-			},
 			backpace: function() {
 				let tmp = []
 				let len = this.equation.length
@@ -90,7 +75,8 @@
 					this.equation.pop()
 				}
 			},
-			clearData: function() {   //reset the init state
+			 //reset the init state
+			clearData: function() {  
 				this.countValue = ''
 				this.num = []
 				this.operator = []
@@ -98,11 +84,23 @@
 				this.equation = []
 				this.lateEquation = []
 			},
-			min: function([ a, b ] = [ 1, 1 ]){  //get the min index of 'x' and '/'
+			compute: function() {  //excute the equation
+				let self = this
+				// if(self.countValue.match(/^[0-9]+([\+\-\*\/][0-9]+)+$/) !== null){  //judge the equation is valid or not
+					self.middleTolate(self.equation)
+					self.excute(self.lateEquation)
+					console.log(self.lateEquation)
+				// }else{
+				// 	console.log('the equation is not valid')
+				// }
+			},
+			//get the min index of 'x' and '/'
+			min: function([ a, b ] = [ 1, 1 ]){  
 				let result = ''
 				a < 0 ? result = b : b < 0 ? result = a : a < b ? result = a : result = b
 				return result
 			},
+			// get the location of operator in this.equation
 			location: function(symbol) {
 				for (var i = 0, len = this.equation.length; i < len; i++) {
 					if(this.equation[i] === symbol){
@@ -112,6 +110,7 @@
 				}
 				return -1;
 			},
+			// transform the nifix expression to postfix expression
 			middleTolate: function(equation) {
 				var eLen = equation.length
 				for (var i = 0 ; i < eLen; i++) {
@@ -120,8 +119,9 @@
 					}else{
 						if(this.operateStack.length !== 0 ) {  
 							if(this.priority[equation[i]] === 0) {
-								this.operateStack.unshift(equation[i])  //if the operator === '(' push into lateEquation directly
+								this.operateStack.unshift(equation[i])  //if the operator === '(' push into operateStack directly
 							}else if(this.priority[equation[i]] === 1) {
+									// push the operator in the front of '(' into lateEquation and delete it from operateStack
 									for(var l = 0, oLen =this.operateStack.length; l < oLen; l++) {
 										var shifted = this.operateStack.shift()
 										if(shifted !== '('){
@@ -129,9 +129,11 @@
 										}
 									}
 							}else {
+								// if current operator's prioity over the first operator's prioity in operateStack push into operateStack directly
 								if(this.priority[equation[i]] >= this.priority[this.operateStack[0]]) {
 									this.operateStack.unshift(equation[i])
 								}else {
+									//push the operator in operateStack that it's prioity higher than the current operator's prioity into lateEquation
 									for(var j = 0, oLen = this.operateStack.length ; j < oLen; j++) {
 										if(this.priority[this.operateStack[j]] >= this.priority[equation[i]]) { 
 											this.lateEquation.push(this.operateStack.shift())
@@ -141,13 +143,31 @@
 								}
 							}
 						}else {
-							this.operateStack.push(equation[i])  //if the operateStack is null push into directly
+							// if the operateStack is null push into directly
+							this.operateStack.push(equation[i])  
 						}
 					}
 				}
-				console.log(this.operateStack)
 				for(var k = 0, oLen = this.operateStack.length; k < oLen; k++) {
 					this.lateEquation.push(this.operateStack.shift())
+				}
+			},
+			excute: function(equation) {
+				let type = {
+					'+' : this.increase,
+					'-' : this.decrease,
+					'*' : this.multiply,
+					'/' : this.divide
+				}
+				for(var m = 0, len = equation.length; m < len; m++) {
+					if(typeof(equation[m]) === 'number') {
+						this.stack.unshift(equation[m])
+					}else {
+						var first = this.stack.shift();
+						var second = this.stack.shift();
+						type[equation[m]]([second,first])
+						this.stack.unshift(this.count)
+					}
 				}
 			}
 		}
